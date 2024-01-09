@@ -1,4 +1,4 @@
-package com.epam.trainingReport.stepDef;
+package stepDef;
 
 import com.epam.trainingReport.TrainingReportApplication;
 import io.cucumber.java.Before;
