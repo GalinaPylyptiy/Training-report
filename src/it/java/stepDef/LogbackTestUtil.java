@@ -1,4 +1,4 @@
-package com.epam.trainingReport.stepDef;
+package stepDef;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;

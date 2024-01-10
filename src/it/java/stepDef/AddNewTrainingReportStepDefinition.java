@@ -1,4 +1,4 @@
-package com.epam.trainingReport.stepDef;
+package stepDef;
 
 import com.epam.trainingReport.model.TrainingRecord;
 import com.epam.trainingReport.model.TrainingReport;
@@ -9,7 +9,6 @@ import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.Month;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -44,8 +43,8 @@ public class AddNewTrainingReportStepDefinition {
         mockTrainingRecord.setFirstName("New");
         mockTrainingRecord.setLastName("Trainer");
         mockTrainingRecord.setActive(true);
-        LocalDateTime dateTime = LocalDateTime.of(2023, Month.DECEMBER, 25, 11, 10);
-        mockTrainingRecord.setDateAndTime(dateTime);
+        LocalDateTime localDateTime = LocalDateTime.now().plusDays(2);
+        mockTrainingRecord.setDateAndTime(localDateTime);
         mockTrainingRecord.setDuration(Duration.ofMinutes(90));
         return mockTrainingRecord;
     }

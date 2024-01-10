@@ -1,4 +1,4 @@
-package com.epam.trainingReport.config;
+package config;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;

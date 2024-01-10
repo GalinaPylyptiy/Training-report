@@ -1,4 +1,4 @@
-package com.epam.trainingReport.stepDef;
+package stepDef;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -11,27 +11,27 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.List;
 
-public class HandleTrainingRecordMessageFailureStepDefinition {
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class HandleTrainingRecordMessageSuccessStepDefinition {
 
     @Autowired
     private TrainingReportMessageConsumer messageConsumer;
+
+    @Autowired
+    private TrainingReportService trainingReportService;
 
     private TrainingReportRequest mockReportRequest;
 
     private String mockTransactionId;
 
     private ListAppender<ILoggingEvent> listAppender;
-
-    private ConstraintViolationException constraintViolationException;
 
     @Before
     public void setUp() {
@@ -43,32 +43,33 @@ public class HandleTrainingRecordMessageFailureStepDefinition {
         LogbackTestUtil.detachListAppender(TrainingReportMessageConsumer.class, listAppender);
     }
 
-    @Given("a new Training Report message with empty username and transaction ID {string} is received form the message broker")
-    public void given_new_training_report_message_with_invalid_data(String transactionId) {
+    @Given("a new Training Report message and transaction ID {string} is received form the message broker")
+    public void givenNewTrainingReportMessage(String transactionId) {
         mockReportRequest = createMockTrainingReportRequest();
         mockTransactionId = transactionId;
     }
 
-    @When("the Training Report Message Consumer fails to validate data")
-    public void consumer_fails_to_processes_message() {
-        try{
-            messageConsumer.handleMessage(mockReportRequest, mockTransactionId);
-        }catch (ConstraintViolationException ex){
-            constraintViolationException = ex;
-        }
+    @When("the Training Report Message Consumer processes the message")
+    public void whenConsumerProcessesMessage() {
+        messageConsumer.handleMessage(mockReportRequest, mockTransactionId);
     }
 
-    @Then("the handleMessage method throws the ConstraintViolationException exception")
+    @Then("the TrainingReport data should be recalculated and updated in database")
     public void thenServiceShouldBeUpdated() {
-        assertThrows(ConstraintViolationException.class,
-                ()-> messageConsumer.handleMessage(mockReportRequest, mockTransactionId));
-        assertNotNull(constraintViolationException);
-        assertFalse(constraintViolationException.getConstraintViolations().isEmpty());
+        TrainingReport updatedReport = trainingReportService.findByUsername(mockReportRequest.getUsername());
+        assertThat(updatedReport).isNotNull();
+        assertThat(updatedReport.getYears()).isNotEmpty();
+    }
+
+    @Then("the logs should contain the message {string}")
+    public void thenLogsShouldContainMessage(String logMessage) {
+        List<ILoggingEvent> logs = listAppender.list;
+        assertThat(logs).extracting("formattedMessage").contains(logMessage);
     }
 
     private TrainingReportRequest createMockTrainingReportRequest() {
         TrainingReportRequest trainingReportRequest = new TrainingReportRequest();
-        trainingReportRequest.setUsername("");
+        trainingReportRequest.setUsername("Kate.Smith");
         trainingReportRequest.setFirstName("Kate");
         trainingReportRequest.setLastName("Smith");
         trainingReportRequest.setActive(true);
@@ -77,4 +78,5 @@ public class HandleTrainingRecordMessageFailureStepDefinition {
         trainingReportRequest.setDuration(Duration.ofMinutes(90));
         return trainingReportRequest;
     }
+
 }

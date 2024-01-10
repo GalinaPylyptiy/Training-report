@@ -1,37 +1,35 @@
-package com.epam.trainingReport.stepDef;
+package stepDef;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.epam.trainingReport.consumer.TrainingReportMessageConsumer;
 import com.epam.trainingReport.dto.TrainingReportRequest;
-import com.epam.trainingReport.model.TrainingReport;
-import com.epam.trainingReport.service.TrainingReportService;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-public class HandleTrainingRecordMessageSuccessStepDefinition {
+public class HandleTrainingRecordMessageFailureStepDefinition {
 
     @Autowired
     private TrainingReportMessageConsumer messageConsumer;
-
-    @Autowired
-    private TrainingReportService trainingReportService;
 
     private TrainingReportRequest mockReportRequest;
 
     private String mockTransactionId;
 
     private ListAppender<ILoggingEvent> listAppender;
+
+    private ConstraintViolationException constraintViolationException;
 
     @Before
     public void setUp() {
@@ -43,33 +41,32 @@ public class HandleTrainingRecordMessageSuccessStepDefinition {
         LogbackTestUtil.detachListAppender(TrainingReportMessageConsumer.class, listAppender);
     }
 
-    @Given("a new Training Report message and transaction ID {string} is received form the message broker")
-    public void givenNewTrainingReportMessage(String transactionId) {
+    @Given("a new Training Report message with empty username and transaction ID {string} is received form the message broker")
+    public void given_new_training_report_message_with_invalid_data(String transactionId) {
         mockReportRequest = createMockTrainingReportRequest();
         mockTransactionId = transactionId;
     }
 
-    @When("the Training Report Message Consumer processes the message")
-    public void whenConsumerProcessesMessage() {
-        messageConsumer.handleMessage(mockReportRequest, mockTransactionId);
+    @When("the Training Report Message Consumer fails to validate data")
+    public void consumer_fails_to_processes_message() {
+        try{
+            messageConsumer.handleMessage(mockReportRequest, mockTransactionId);
+        }catch (ConstraintViolationException ex){
+            constraintViolationException = ex;
+        }
     }
 
-    @Then("the TrainingReport data should be recalculated and updated in database")
+    @Then("the handleMessage method throws the ConstraintViolationException exception")
     public void thenServiceShouldBeUpdated() {
-        TrainingReport updatedReport = trainingReportService.findByUsername(mockReportRequest.getUsername());
-        assertThat(updatedReport).isNotNull();
-        assertThat(updatedReport.getYears()).isNotEmpty();
-    }
-
-    @Then("the logs should contain the message {string}")
-    public void thenLogsShouldContainMessage(String logMessage) {
-        List<ILoggingEvent> logs = listAppender.list;
-        assertThat(logs).extracting("formattedMessage").contains(logMessage);
+        assertThrows(ConstraintViolationException.class,
+                ()-> messageConsumer.handleMessage(mockReportRequest, mockTransactionId));
+        assertNotNull(constraintViolationException);
+        assertFalse(constraintViolationException.getConstraintViolations().isEmpty());
     }
 
     private TrainingReportRequest createMockTrainingReportRequest() {
         TrainingReportRequest trainingReportRequest = new TrainingReportRequest();
-        trainingReportRequest.setUsername("Kate.Smith");
+        trainingReportRequest.setUsername("");
         trainingReportRequest.setFirstName("Kate");
         trainingReportRequest.setLastName("Smith");
         trainingReportRequest.setActive(true);
@@ -78,5 +75,4 @@ public class HandleTrainingRecordMessageSuccessStepDefinition {
         trainingReportRequest.setDuration(Duration.ofMinutes(90));
         return trainingReportRequest;
     }
-
 }
