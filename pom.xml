@@ -120,7 +120,7 @@
     <build>
         <testResources>
             <testResource>
-                <directory>src/it/resources</directory>
+                <directory>src/test-integration/resources</directory>
             </testResource>
             <testResource>
                 <directory>src/test/resources</directory>
@@ -144,7 +144,7 @@
                         <configuration>
                             <compileSourceRoots>
                                 <compileSourceRoot>src/test/java</compileSourceRoot>
-                                <compileSourceRoot>src/it/java</compileSourceRoot>
+                                <compileSourceRoot>src/test-integration/java</compileSourceRoot>
                             </compileSourceRoots>
                         </configuration>
                     </execution>
