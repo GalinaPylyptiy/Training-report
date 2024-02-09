@@ -1,0 +1,43 @@
+version: '3'
+
+name: training-report
+services:
+    db:
+        image: mongo:latest
+        ports:
+          - "27017:27017"
+        environment:
+            MONGO_INITDB_DATABASE: training_report
+        volumes:
+          - ./mondo_data:/data/db
+        healthcheck:
+            test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/training_report --quiet
+            interval: 10s
+            timeout: 10s
+            retries: 5
+
+    report:
+        build:
+            context: .
+        image: training-report:latest
+        ports:
+            - "8888:8888"
+        depends_on:
+          db:
+            condition: service_healthy
+        environment:
+          - SECRET_KEY=48404D635166546A576E5A7234753778217A25432A462D4A614E645267556B58
+          - BROKER_URL=tcp://localhost:61616
+          - SERVER_PORT=8888
+          - DB_HOST=db
+          - DB_PORT=27017
+          - DB_NAME=training_report
+          - ACTIVEMQ_USER=admin
+          - ACTIVEMQ_PASSWORD=admin
+          - BROKER_URL=tcp://192.168.0.102:61616
+
+
+volumes:
+    mondo_data:
+
+
