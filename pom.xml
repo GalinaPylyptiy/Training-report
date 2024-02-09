@@ -118,6 +118,7 @@
         </dependencies>
     </dependencyManagement>
     <build>
+        <finalName>training-report</finalName>
         <testResources>
             <testResource>
                 <directory>src/test-integration/resources</directory>
